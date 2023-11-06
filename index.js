@@ -2,7 +2,12 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config()
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 const app = express();
+
+const secret = 'verymuchsecretpasskey'
+
 const port = process.env.PORT || 5000;
 
 
@@ -10,6 +15,7 @@ const port = process.env.PORT || 5000;
 //middleware
 app.use(cors());
 app.use(express.json());
+app.use(cookieParser());
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.b5j4nsy.mongodb.net/?retryWrites=true&w=majority`;
@@ -28,8 +34,38 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         // await client.connect();
         const blogCollection = client.db("blogDB").collection("blogs");
+        const userCollection = client.db("blogDB").collection("users");
 
-        
+        //middleware
+        //verify token and grant access
+        const gateman = (req, res) => {
+            const { token } = req.cookies;
+
+            if (!token) {
+                return res.status(401).send({ message: 'You are not authorized' })
+            }
+            jwt.verify(token, secret, function (err, decoded) {
+                if (err) {
+                    return res.status(401).send({ message: 'You are not authorized' })
+                }
+                req.user = decoded;
+                next();
+            })
+        }
+
+        // Get user information by email
+        app.get('/user', gateman, async (req, res) => {
+            const queryEmail = req.query.email;
+            const tokenEmail = req.user.email;
+
+            if (queryEmail === tokenEmail) {
+                return res.status(403).send({ message: 'Forbidden access' });
+            }
+
+            const query = { email: queryEmail };
+            const result = await userCollection.find(query).toArray();
+            res.send(result);
+        });
 
         //get blogs
         app.get("/blogs", async (req, res) => {
@@ -37,9 +73,9 @@ async function run() {
             res.send(result);
         });
 
-        app.get("/blogs/:id", async(req, res) =>{
+        app.get("/blogs/:id", async (req, res) => {
             const id = req.params.id;
-            const query = {_id: new ObjectId(id)};
+            const query = { _id: new ObjectId(id) };
             const result = await blogCollection.findOne(query);
             res.send(result);
         });
@@ -53,11 +89,48 @@ async function run() {
             res.send(result);
         });
 
-        app.delete("/blogs/:id", async(req, res) =>{
+        //post user
+        app.post('/user', async (req, res) => {
+            const user = req.body;
+            console.log('new user', user);
+            const result = await userCollection.insertOne(user);
+            console.log(result);
+            res.send(result);
+        });
+
+        //user specific 
+        app.get('/user', gateman, async (req, res) => {
+            const queryEmail = req.query.email;
+            const tokenEmail = req.user.email;
+
+            if (queryEmail === tokenEmail) {
+                return res.status(403).send({message: 'forbidden access'})
+            }
+
+            let query = {}
+            if(queryEmail){
+                query.email = queryEmail;
+            }            
+            const result = await userCollection.find(query).toArray();
+            res.send(result)
+        });
+
+        app.delete("/blogs/:id", async (req, res) => {
             const id = req.params.id;
-            const query = {_id: new ObjectId(id)}
+            const query = { _id: new ObjectId(id) }
             const result = await blogCollection.deleteOne(query)
             res.send(result)
+        })
+
+        //creating token and send to client
+        app.post("/auth/access-token", gateman, async (req, res) => {
+            const user = req.body
+            const token = jwt.sign(user, secret);
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'none'
+            }).send({ success: true })
         })
 
         app.put("/blogs/:id", async (req, res) => {
@@ -67,22 +140,22 @@ async function run() {
             const filter = { _id: new ObjectId(id) };
             const options = { upsert: true };
             const updatedBlog = {
-              $set: {
-                title: data.title,
-                image: data.image,
-                category: data.category,
-                shortDescription: data.shortDescription,
-                longDescription: data.longDescription,
-                
-              },
+                $set: {
+                    title: data.title,
+                    image: data.image,
+                    category: data.category,
+                    shortDescription: data.shortDescription,
+                    longDescription: data.longDescription,
+
+                },
             };
             const result = await blogCollection.updateOne(
-              filter,
-              updatedBlog,
-              options
+                filter,
+                updatedBlog,
+                options
             );
             res.send(result);
-          });
+        });
 
 
         // Send a ping to confirm a successful connection
