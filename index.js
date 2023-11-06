@@ -5,6 +5,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const app = express();
+// const Date = require('Date');
 
 const secret = 'verymuchsecretpasskey'
 
@@ -83,6 +84,7 @@ async function run() {
         //post single blog
         app.post('/blogs', async (req, res) => {
             const blog = req.body;
+            blog.createdAt = new Date();
             console.log('new blog', blog);
             const result = await blogCollection.insertOne(blog);
             console.log(result);
@@ -141,7 +143,7 @@ async function run() {
             const options = { upsert: true };
             const updatedBlog = {
                 $set: {
-                    title: data.title,
+                    tittle: data.tittle,
                     image: data.image,
                     category: data.category,
                     shortDescription: data.shortDescription,
