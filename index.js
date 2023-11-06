@@ -5,7 +5,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const app = express();
-// const Date = require('Date');
+
 
 const secret = 'verymuchsecretpasskey'
 
@@ -39,7 +39,7 @@ async function run() {
 
         //middleware
         //verify token and grant access
-        const gateman = (req, res) => {
+        const gateman = (req, res, next) => {
             const { token } = req.cookies;
 
             if (!token) {
@@ -55,18 +55,18 @@ async function run() {
         }
 
         // Get user information by email
-        app.get('/user', gateman, async (req, res) => {
-            const queryEmail = req.query.email;
-            const tokenEmail = req.user.email;
+        // app.get('/user', gateman, async (req, res) => {
+        //     const queryEmail = req.query.email;
+        //     const tokenEmail = req.user.email;
 
-            if (queryEmail === tokenEmail) {
-                return res.status(403).send({ message: 'Forbidden access' });
-            }
+        //     if (queryEmail === tokenEmail) {
+        //         return res.status(403).send({ message: 'Forbidden access' });
+        //     }
 
-            const query = { email: queryEmail };
-            const result = await userCollection.find(query).toArray();
-            res.send(result);
-        });
+        //     const query = { email: queryEmail };
+        //     const result = await userCollection.find(query).toArray();
+        //     res.send(result);
+        // });
 
         //get blogs
         app.get("/blogs", async (req, res) => {
@@ -91,8 +91,11 @@ async function run() {
             res.send(result);
         });
 
+
+
         //post user
-        app.post('/user', async (req, res) => {
+        
+        app.post('/users', async (req, res) => {
             const user = req.body;
             console.log('new user', user);
             const result = await userCollection.insertOne(user);
@@ -100,22 +103,54 @@ async function run() {
             res.send(result);
         });
 
+        // Add a blog to a user's wishlist
+        // app.post('/add-to-wishlist/:blogId', gateman, async (req, res) => {
+            
+        //     const { blogId } = req.params;
+        //     const userId = req.user._id;
+
+        //     const userQuery = { _id: new ObjectId(userId) };
+        //     const userUpdate = { $addToSet: { wishlist: blogId } };
+
+        //     const result = await userCollection.updateOne(userQuery, userUpdate);
+        //     res.send(result);
+        // });
+
         //user specific 
-        app.get('/user', gateman, async (req, res) => {
-            const queryEmail = req.query.email;
-            const tokenEmail = req.user.email;
+        // app.get('/user-wishlist', gateman, async (req, res) => {
+        //     const queryEmail = req.query.email;
+        //     const tokenEmail = req.user.email;
 
-            if (queryEmail === tokenEmail) {
-                return res.status(403).send({message: 'forbidden access'})
-            }
+        //     if (queryEmail === tokenEmail) {
+        //         return res.status(403).send({message: 'forbidden access'})
+        //     }
 
-            let query = {}
-            if(queryEmail){
-                query.email = queryEmail;
-            }            
-            const result = await userCollection.find(query).toArray();
-            res.send(result)
-        });
+        //     let query = {}
+        //     if(queryEmail){
+        //         query.email = queryEmail;
+        //     }            
+        //     const result = await userCollection.find(query).toArray();
+        //     res.send(result)
+        // });
+        // app.get('/user-wishlist', gateman, async (req, res) => {
+        //     const queryEmail = req.query.email;
+        //     const tokenEmail = req.user.email;
+
+        //     if (queryEmail !== tokenEmail) {
+        //         return res.status(403).send({ message: 'Forbidden access' });
+        //     }
+
+        //     const query = { email: queryEmail };
+        //     const user = await userCollection.findOne(query);
+
+        //     if (!user || !user.wishlist) {
+        //         return res.status(404).send({ message: 'Wishlist not found' });
+        //     }
+
+        //     const wishlistIds = user.wishlist.map(id => new ObjectId(id));
+        //     const wishlist = await blogCollection.find({ _id: { $in: wishlistIds } }).toArray();
+        //     res.send(wishlist);
+        // });
 
         app.delete("/blogs/:id", async (req, res) => {
             const id = req.params.id;
