@@ -77,6 +77,9 @@ async function run() {
         app.get("/blogs/:id", async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
+            // const options = {
+            //     projection: { tittle: 1, image: 1, category: 1, shortDescription: 1 }
+            // };
             const result = await blogCollection.findOne(query);
             res.send(result);
         });
@@ -94,7 +97,16 @@ async function run() {
 
 
         //post user
-        
+        app.get('/users', async (req, res) => {
+            console.log(req.query.email);
+            let query = {};
+            if (req.query?.email) {
+                query = { email: req.query.email }
+            }
+            const result = await userCollection.find().toArray();
+            res.send(result);
+        })
+
         app.post('/users', async (req, res) => {
             const user = req.body;
             console.log('new user', user);
@@ -105,7 +117,7 @@ async function run() {
 
         // Add a blog to a user's wishlist
         // app.post('/add-to-wishlist/:blogId', gateman, async (req, res) => {
-            
+
         //     const { blogId } = req.params;
         //     const userId = req.user._id;
 
