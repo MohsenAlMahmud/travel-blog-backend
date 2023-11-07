@@ -37,6 +37,7 @@ async function run() {
         const blogCollection = client.db("blogDB").collection("blogs");
         const userCollection = client.db("blogDB").collection("users");
         const wishCollection = client.db("blogDB").collection("wishes");
+        const commentCollection = client.db("blogDB").collection("comments");
 
         //middleware
         //verify token and grant access
@@ -56,7 +57,7 @@ async function run() {
         }
 
         // Get user information by email
-        app.get('/user', gateman, async (req, res) => {
+        app.get('/user', async (req, res) => {
             const queryEmail = req.query.email;
             const tokenEmail = req.user.email;
 
@@ -73,12 +74,12 @@ async function run() {
         });
 
         //get blogs
-        app.get("/blogs", gateman, async (req, res) => {
+        app.get("/blogs", async (req, res) => {
             const result = await blogCollection.find().toArray();
             res.send(result);
         });
 
-        app.get("/blogs/:id", gateman, async (req, res) => {
+        app.get("/blogs/:id", async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             // const options = {
@@ -89,7 +90,7 @@ async function run() {
         });
 
         //post single blog
-        app.post('/blogs', gateman, async (req, res) => {
+        app.post('/blogs', async (req, res) => {
             const blog = req.body;
             blog.createdAt = new Date();
             console.log('new blog', blog);
@@ -101,7 +102,7 @@ async function run() {
 
 
         //post user
-        app.get('/users', gateman, async (req, res) => {
+        app.get('/users', async (req, res) => {
             console.log(req.query.email);
             let query = {};
             if (req.query?.email) {
@@ -111,7 +112,7 @@ async function run() {
             res.send(result);
         })
 
-        app.post('/users', gateman, async (req, res) => {
+        app.post('/users', async (req, res) => {
             const user = req.body;
             console.log('new user', user);
             const result = await userCollection.insertOne(user);
@@ -120,14 +121,14 @@ async function run() {
         });
 
         //wishes collections:--
-         //add wishes to wish collection
-         app.post("/wishes", async (req, res) => {
+        //add wishes to wish collection
+        app.post("/wishes", async (req, res) => {
             const wish = req.body;
-              console.log(wish);
+            console.log(wish);
             const result = await wishCollection.insertOne(wish);
             // console.log(result);
             res.send(result);
-          });
+        });
 
         app.get("/wishes", async (req, res) => {
             const result = await wishCollection.find().toArray();
@@ -137,9 +138,24 @@ async function run() {
         app.delete("/wishes/:id", async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
-            const result = await blogCollection.deleteOne(query)
+            const result = await wishCollection.deleteOne(query)
             res.send(result)
         })
+
+        //comments collection
+        app.post("/comments", async (req, res) => {
+            const comment = req.body;
+            console.log(comment);
+            const result = await commentCollection.insertOne(comment);
+            // console.log(result);
+            res.send(result);
+        });
+
+        app.get("/comments", async (req, res) => {
+            const result = await commentCollection.find().toArray();
+            res.send(result);
+        });
+
 
         // app.get('/wishes', async (req, res) => {
         //     console.log(req.query.email);
@@ -151,7 +167,7 @@ async function run() {
         //     res.send(result);
         // })
 
-       
+
 
         // Add a blog to a user's wishlist
         // app.post('/add-to-wishlist/:blogId', gateman, async (req, res) => {
@@ -220,7 +236,7 @@ async function run() {
             }).send({ success: true })
         })
 
-        app.put("/blogs/:id", gateman, async (req, res) => {
+        app.put("/blogs/:id", async (req, res) => {
             const id = req.params.id;
             const data = req.body;
             console.log("id", id, data);
@@ -228,6 +244,8 @@ async function run() {
             const options = { upsert: true };
             const updatedBlog = {
                 $set: {
+                    name: data.name,
+                    email: data.email,
                     tittle: data.tittle,
                     image: data.image,
                     category: data.category,
