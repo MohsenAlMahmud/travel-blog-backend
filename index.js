@@ -7,7 +7,7 @@ const cookieParser = require('cookie-parser');
 const app = express();
 
 
-const secret = 'verymuchsecretpasskey'
+
 
 const port = process.env.PORT || 5000;
 
@@ -45,7 +45,7 @@ async function run() {
             if (!token) {
                 return res.status(401).send({ message: 'You are not authorized' })
             }
-            jwt.verify(token, secret, function (err, decoded) {
+            jwt.verify(token, SECRET, function (err, decoded) {
                 if (err) {
                     return res.status(401).send({ message: 'You are not authorized' })
                 }
@@ -174,7 +174,7 @@ async function run() {
         //creating token and send to client
         app.post("/auth/access-token", gateman, async (req, res) => {
             const user = req.body
-            const token = jwt.sign(user, secret);
+            const token = jwt.sign(user, SECRET);
             res.cookie('token', token, {
                 httpOnly: true,
                 secure: true,
