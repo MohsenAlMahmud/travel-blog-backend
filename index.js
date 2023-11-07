@@ -156,19 +156,6 @@ async function run() {
             res.send(result);
         });
 
-
-        // app.get('/wishes', async (req, res) => {
-        //     console.log(req.query.email);
-        //     let query = {};
-        //     if (req.query?.email) {
-        //         query = { email: req.query.email }
-        //     }
-        //     const result = await userCollection.find().toArray();
-        //     res.send(result);
-        // })
-
-
-
         // Add a blog to a user's wishlist
         // app.post('/add-to-wishlist/:blogId', gateman, async (req, res) => {
 
