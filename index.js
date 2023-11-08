@@ -126,7 +126,7 @@ async function run() {
             const wish = req.body;
             console.log(wish);
             const result = await wishCollection.insertOne(wish);
-            // console.log(result);
+            console.log(result);
             res.send(result);
         });
 
@@ -156,19 +156,7 @@ async function run() {
             res.send(result);
         });
 
-        // Add a blog to a user's wishlist
-        // app.post('/add-to-wishlist/:blogId', gateman, async (req, res) => {
-
-        //     const { blogId } = req.params;
-        //     const userId = req.user._id;
-
-        //     const userQuery = { _id: new ObjectId(userId) };
-        //     const userUpdate = { $addToSet: { wishlist: blogId } };
-
-        //     const result = await userCollection.updateOne(userQuery, userUpdate);
-        //     res.send(result);
-        // });
-
+        
         //user specific 
         // app.get('/user-wishlist', gateman, async (req, res) => {
         //     const queryEmail = req.query.email;
@@ -213,7 +201,7 @@ async function run() {
         })
 
         //creating token and send to client
-        app.post("/auth/access-token", gateman, async (req, res) => {
+        app.post("/auth/access-token", async (req, res) => {
             const user = req.body
             const token = jwt.sign(user, SECRET);
             res.cookie('token', token, {
@@ -248,6 +236,7 @@ async function run() {
             );
             res.send(result);
         });
+        //logout coockies
 
 
         // Send a ping to confirm a successful connection
