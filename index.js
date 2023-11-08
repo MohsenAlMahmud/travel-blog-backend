@@ -56,6 +56,17 @@ async function run() {
             })
         }
 
+         //creating token and send to client
+         app.post("/auth/access-token", async (req, res) => {
+            const user = req.body
+            const token = jwt.sign(user, SECRET);
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'none'
+            }).send({ success: true })
+        })
+
         // Get user information by email
         app.get('/user', async (req, res) => {
             const queryEmail = req.query.email;
@@ -64,7 +75,6 @@ async function run() {
             if (queryEmail === tokenEmail) {
                 return res.status(403).send({ message: 'Forbidden access' });
             }
-
             const query = { email: queryEmail };
             const result = await userCollection.find(query).toArray();
             res.send(result);
@@ -81,10 +91,7 @@ async function run() {
 
         app.get("/blogs/:id", async (req, res) => {
             const id = req.params.id;
-            const query = { _id: new ObjectId(id) };
-            // const options = {
-            //     projection: { tittle: 1, image: 1, category: 1, shortDescription: 1 }
-            // };
+            const query = { _id: new ObjectId(id) };            
             const result = await blogCollection.findOne(query);
             res.send(result);
         });
@@ -142,7 +149,9 @@ async function run() {
             res.send(result)
         })
 
-        //comments collection
+
+
+        //comments collections:--
         app.post("/comments", async (req, res) => {
             const comment = req.body;
             console.log(comment);
@@ -154,44 +163,7 @@ async function run() {
         app.get("/comments", async (req, res) => {
             const result = await commentCollection.find().toArray();
             res.send(result);
-        });
-
-        
-        //user specific 
-        // app.get('/user-wishlist', gateman, async (req, res) => {
-        //     const queryEmail = req.query.email;
-        //     const tokenEmail = req.user.email;
-
-        //     if (queryEmail === tokenEmail) {
-        //         return res.status(403).send({message: 'forbidden access'})
-        //     }
-
-        //     let query = {}
-        //     if(queryEmail){
-        //         query.email = queryEmail;
-        //     }            
-        //     const result = await userCollection.find(query).toArray();
-        //     res.send(result)
-        // });
-        // app.get('/user-wishlist', gateman, async (req, res) => {
-        //     const queryEmail = req.query.email;
-        //     const tokenEmail = req.user.email;
-
-        //     if (queryEmail !== tokenEmail) {
-        //         return res.status(403).send({ message: 'Forbidden access' });
-        //     }
-
-        //     const query = { email: queryEmail };
-        //     const user = await userCollection.findOne(query);
-
-        //     if (!user || !user.wishlist) {
-        //         return res.status(404).send({ message: 'Wishlist not found' });
-        //     }
-
-        //     const wishlistIds = user.wishlist.map(id => new ObjectId(id));
-        //     const wishlist = await blogCollection.find({ _id: { $in: wishlistIds } }).toArray();
-        //     res.send(wishlist);
-        // });
+        });             
 
         app.delete("/blogs/:id", async (req, res) => {
             const id = req.params.id;
@@ -200,16 +172,7 @@ async function run() {
             res.send(result)
         })
 
-        //creating token and send to client
-        app.post("/auth/access-token", async (req, res) => {
-            const user = req.body
-            const token = jwt.sign(user, SECRET);
-            res.cookie('token', token, {
-                httpOnly: true,
-                secure: true,
-                sameSite: 'none'
-            }).send({ success: true })
-        })
+       
 
         app.put("/blogs/:id", async (req, res) => {
             const id = req.params.id;
@@ -226,7 +189,6 @@ async function run() {
                     category: data.category,
                     shortDescription: data.shortDescription,
                     longDescription: data.longDescription,
-
                 },
             };
             const result = await blogCollection.updateOne(
@@ -236,7 +198,9 @@ async function run() {
             );
             res.send(result);
         });
-        //logout coockies
+
+
+        //logout cookies
 
 
         // Send a ping to confirm a successful connection
